@@ -3,4 +3,22 @@ title: Traffic Data Analysis
 output: html_document
 ---
 
-this is where things start :)
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+```{r}
+mydata <- read.csv("all-semi-unique.csv")
+nrow(mydata)
+ncol(mydata)
+names(mydata)
+head(mydata)
+tail(mydata)
+summary(mydata)
+```
+From Summary it can be viewed that the add columns have only one value for all the observations. Perform data cleaning and remove them.
+
+```{r}
+mydata <- subset.data.frame(mydata, select = -c(ad.aid, ad.lid, ad.g, ad.bgcl, ad.bgcls, ad.fncl, ad.fncls, ad.logo, ad.logo2x, ad.cm, ad.logoAndroidS, ad.logoAndroidH, ad.url))
+summary(mydata)
+```

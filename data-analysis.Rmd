@@ -3,46 +3,47 @@ title: Traffic Data Analysis
 output: html_document
 ---
 
-```{r}
+```{r, CACHE = TRUE}
 library(reshape2)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 ```
-```{r}
+```{r, CACHE = TRUE}
 mydata <- read.csv("all-semi-unique.csv")
 nrow(mydata)
 ncol(mydata)
 names(mydata)
 head(mydata)
-tail(mydata)
+summary(mydata)
 ```
 
 Having a look at the internal structure and types of the columns.
-```{r}
+```{r, CACHE = TRUE}
 str(mydata)
 ```
 All the columns that are of type 'Factor' and have only one level are going to be removed, they are not adding any new information to the data or creating patterns. Clean data by removing them.
 Those columns are : ad.bgcl , ad.bgcls, ad.fncl, ad.fncls, ad.logo, ad.logo2x, ad.logoAndroidS, ad.logoAndroidH, ad.cm, ad.url, rd.cl.
 
-```{r}
+```{r, CACHE = TRUE}
 mydata <- subset.data.frame(mydata, select = -c(ad.bgcl , ad.bgcls, ad.fncl, ad.fncls, ad.logo, ad.logo2x, ad.logoAndroidS, ad.logoAndroidH, ad.cm, ad.url, rd.cl))
 ```
 Check if there are still other columns that have no unique values. 
-```{r}
+```{r, CACHE = TRUE}
 col_ct = sapply(mydata, function(x) length(unique(x)))
 length(col_ct[col_ct==1])
 names(col_ct[col_ct==1])
 ```
 Remove those columns.
-```{r}
+```{r, CACHE = TRUE}
 mydata = mydata[, !names(mydata) %in% names(col_ct[col_ct==1])]
 ```
 Check for duplicate rows.
-```{r}
+```{r, CACHE = TRUE}
 nrow(mydata) - nrow(unique(mydata))
 ```
 Plotting numeric columns
-```{r}
+```{r, CACHE = TRUE}
 ncol(mydata)
 numeric_data <- mydata[, sapply(mydata, is.numeric)]
 d <- melt(numeric_data)
@@ -52,8 +53,23 @@ ggplot(d,aes(x = value)) +
 ```
 
 Checking ratio of NAs for every column
-```{r}
+```{r, CACHE = TRUE}
 sapply(mydata, function(x) sum(is.na(x))/(nrow(mydata)))
+# barplot(sapply(mydata[,1:10], function(col) sum(is.na(col))),xlab = " columns ", ylab = " NA count ")
+# barplot(sapply(mydata[,11:19], function(col) sum(is.na(col))),xlab = " columns ", ylab = " NA count ")
 ```
-check the values for rd.rp.rpImg 
+check the values for rd.rp.rpImg
 check the uniqueness of the values for each column
+Break down the crawl date into date, time.
+First set crawl date into a time-date context instead of a factor, extract from it the actual time of report using rd.rp.hr and rd.rp.mn which represent elapsed time since the report was posted in UTC, then add 2 hours to obtain cairo time. Then Get the day of week which corresponds to that date, finally get rid of those columns.
+```{r, CACHE = TRUE}
+mydata$crawl_date <-strptime(mydata$crawl_date, format = "%a %b %e %X UTC %Y", tz = "UTC")
+str(mydata$crawl_date)
+mydata$calculated_cairo_date <- as.POSIXct(mydata$crawl_date, tz = "UTC") - mydata$rd.rp.hr*60*60 - mydata$rd.rp.mn*60 + 2*60*60
+mydata$Day.Of.Week <- weekdays(mydata$calculated_cairo_date)
+mydata <- subset.data.frame(mydata, select = -c(crawl_date, rd.rp.hr, rd.rp.mn))
+#rd_ri_trial <- subset(mydata, mydata$rd.nm =="Sa7rawy;Alex To Cairo")
+#View(rd_ri_trial)
+str(mydata)
+#nrow(mydata) - nrow(unique(mydata))
+```

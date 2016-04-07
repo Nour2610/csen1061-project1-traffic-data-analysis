@@ -63,7 +63,8 @@ mydata$Day.Of.Week <- weekdays(mydata$calculated_cairo_date)
 mydata <- subset.data.frame(mydata, select = -c(crawl_date, rd.rp.hr, rd.rp.mn))
 str(mydata)
 ```
-Plotting numeric columns
+Plotting numeric columns  
+As can be seen from the histograms, the rd.rp.stid and rd.stid have a range of 10 discrete values.  
 ```{r, CACHE = TRUE}
 ncol(mydata)
 numeric_data <- mydata[, sapply(mydata, is.numeric)]
@@ -76,6 +77,8 @@ Checking uniqueness of each column value.
 ```{r}
 uniqueness = sapply(mydata, function(x) length(unique(x)))
 ```
+The dimension of interest is the traffic density.
+The metrics are the road status id provided by bey2ollak and the hour of day and the week of day.  
 By taking a look at the html of the bey2ollak website, we can find out that 
 
 Default Comment| Corresponding stid
@@ -87,9 +90,9 @@ za7ma:         |       4
 mafeesh 2amal: |       5
 
 
-Extracting the hour of the day from the calculated time of the report.
-Turning the hour of day and week day into factors with discrete levels.
-Extracting data based on only on the five different road status IDs provided above.
+Extracting the hour of the day from the calculated time of the report.  
+Turning the hour of day and week day into factors with discrete levels.  
+Extracting data based on only on the five different road status IDs provided above.  
 ```{r}
 t.str <- strptime(mydata$calculated_cairo_date, "%Y-%m-%d %H:%M:%S")
 mydata$Hour.Of.Day <- as.numeric(format(t.str, "%H"))
@@ -98,21 +101,20 @@ mydata$Hour.Of.Day <- factor(mydata$Hour.Of.Day)
 #mydata$rd.stid <- factor(mydata$rd.stid, ordered = T)
 traffic_status <- subset(mydata, mydata$rd.stid %in% c(1,2,3,4,5))
 ```
-Trying to plot the state of the traffic based on the mean of the provided status ids on the different days of the week.
+Trying to plot the state of the traffic based on the mean of the provided status ids on the different days of the week. The higher the mean, the higher the traffic density.  
 ```{r}
 # ggplot(data = traffic_status, aes(x=Day.Of.Week)) + geom_histogram(aes(weights= density, fill=rd.stid)) + scale_fill_brewer(palette="Set3") + facet_wrap( ~ rd.stid, ncol=1)
 Traffic_weekDay <- traffic_status %>% group_by(Day.Of.Week) %>% summarise(mean = mean(rd.stid))
 Traffic_weekDay%>% ggplot(aes(x=Day.Of.Week, y=mean)) + geom_bar(stat="identity", width = 0.8)
 ```
 
-Trying to plot the state of the traffic based on the mean of the provided status ids on the different hours of the day.
+Trying to plot the state of the traffic based on the mean of the provided status ids on the different hours of the day.  
 ```{r}
 Traffic_hour <- traffic_status %>% group_by(Hour.Of.Day) %>% summarise(mean = mean(rd.stid))
 Traffic_hour%>% ggplot(aes(x=Hour.Of.Day, y=mean)) + geom_bar(stat="identity", width = 0.8)
 ```
 
-Frequency of reporting days.
+Frequency of reporting days.  
 ```{r, TIDY = TRUE, CACHE = TRUE}
 qplot(mydata$Day.Of.Week, xlab = "Days of the week", ylab = "Reports count")
 ```
-As can be seen from the histograms, the rd.rp.stid and rd.stid have a range of 10 discrete values.

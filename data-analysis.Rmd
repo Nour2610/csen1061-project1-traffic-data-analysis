@@ -42,24 +42,17 @@ Check for duplicate rows.
 ```{r, CACHE = TRUE}
 nrow(mydata) - nrow(unique(mydata))
 ```
-Plotting numeric columns
-```{r, CACHE = TRUE}
-ncol(mydata)
-numeric_data <- mydata[, sapply(mydata, is.numeric)]
-d <- melt(numeric_data)
-ggplot(d,aes(x = value)) + 
-    facet_wrap(~variable,scales = "free") + 
-    geom_histogram()
-```
-
 Checking ratio of NAs for every column
 ```{r, CACHE = TRUE}
 sapply(mydata, function(x) sum(is.na(x))/(nrow(mydata)))
 # barplot(sapply(mydata[,1:10], function(col) sum(is.na(col))),xlab = " columns ", ylab = " NA count ")
 # barplot(sapply(mydata[,11:19], function(col) sum(is.na(col))),xlab = " columns ", ylab = " NA count ")
 ```
-check the values for rd.rp.rpImg
-check the uniqueness of the values for each column
+The values of the image columns have a high ratio of NAs, these images can either be of the user who posted the comment, or a picture they took of the street reported according to the website, do not find it useful, remove it to clear the data.
+
+```{r, CACHE = TRUE}
+mydata <- subset.data.frame(mydata, select = -c(rd.rp.rpImg, rd.rp.img, rd.img))
+```
 Break down the crawl date into date, time.
 First set crawl date into a time-date context instead of a factor, extract from it the actual time of report using rd.rp.hr and rd.rp.mn which represent elapsed time since the report was posted in UTC, then add 2 hours to obtain cairo time. Then Get the day of week which corresponds to that date, finally get rid of those columns.
 ```{r, CACHE = TRUE}
@@ -72,4 +65,13 @@ mydata <- subset.data.frame(mydata, select = -c(crawl_date, rd.rp.hr, rd.rp.mn))
 #View(rd_ri_trial)
 str(mydata)
 #nrow(mydata) - nrow(unique(mydata))
+```
+Plotting numeric columns
+```{r, CACHE = TRUE}
+ncol(mydata)
+numeric_data <- mydata[, sapply(mydata, is.numeric)]
+d <- melt(numeric_data)
+ggplot(d,aes(x = value)) + 
+    facet_wrap(~variable,scales = "free") + 
+    geom_histogram()
 ```
